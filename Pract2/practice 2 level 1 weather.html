@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Прогноз погоди</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sky:    #0a1628;
+      --mid:    #0d2545;
+      --card:   #0f2e55cc;
+      --accent: #4fc3f7;
+      --gold:   #ffd54f;
+      --text:   #e8f4fd;
+      --muted:  #7cb8d8;
+      --radius: 20px;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      background: radial-gradient(ellipse at 30% 20%, #1a3a6e 0%, var(--sky) 60%),
+                  radial-gradient(ellipse at 80% 80%, #0d3060 0%, transparent 50%);
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 15% 12%, #fff8 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 8%,  #fff6 0%, transparent 100%),
+        radial-gradient(1px 1px at 72% 18%, #fff7 0%, transparent 100%),
+        radial-gradient(1px 1px at 88% 5%,  #fff5 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 5% 35%, #fff4 0%, transparent 100%),
+        radial-gradient(1px 1px at 93% 40%, #fff6 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 3%,  #fff3 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 28% 55%, #fff4 0%, transparent 100%);
+    }
+
+    .container {
+      width: 420px;
+      max-width: 95vw;
+      padding: 20px;
+      animation: fadeUp .6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .search-wrap {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .search-wrap input {
+      flex: 1;
+      padding: 14px 18px;
+      border-radius: 50px;
+      border: 1.5px solid #ffffff22;
+      background: var(--card);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      backdrop-filter: blur(12px);
+      transition: border-color .2s;
+    }
+    .search-wrap input::placeholder { color: var(--muted); }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap button {
+      padding: 14px 20px;
+      border-radius: 50px;
+      border: none;
+      background: var(--accent);
+      color: var(--sky);
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform .15s, background .15s;
+    }
+    .search-wrap button:hover { transform: scale(1.07); background: #81d4fa; }
+    .search-wrap button:active { transform: scale(.97); }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid #ffffff14;
+      border-radius: var(--radius);
+      padding: 32px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 60px #00000060, inset 0 1px 0 #ffffff18;
+      transition: opacity .3s;
+    }
+    .card.loading { opacity: .5; pointer-events: none; }
+
+    .placeholder {
+      text-align: center;
+      padding: 20px 0;
+      opacity: .55;
+    }
+    .placeholder .icon-big { font-size: 54px; margin-bottom: 10px; }
+    .placeholder p { font-size: 14px; color: var(--muted); }
+
+    .weather { display: none; }
+
+    .city-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .city-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      letter-spacing: .04em;
+      line-height: 1;
+      color: var(--text);
+    }
+    .country-tag {
+      background: var(--accent);
+      color: var(--sky);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+
+    .date-line {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .main-temp-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .weather-icon { font-size: 64px; line-height: 1; }
+    .temp-big {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 88px;
+      line-height: 1;
+      color: var(--gold);
+    }
+    .temp-big sup {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 28px;
+      font-weight: 300;
+      vertical-align: super;
+      color: var(--muted);
+    }
+
+    .description {
+      font-size: 18px;
+      font-weight: 500;
+      text-transform: capitalize;
+      margin-bottom: 28px;
+      color: #b3dff5;
+    }
+
+    /* ── Details grid ── */
+    .details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .detail-item {
+      background: #ffffff0a;
+      border: 1px solid #ffffff0f;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .detail-label {
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .detail-value {
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    .error {
+      display: none;
+      text-align: center;
+      padding: 16px 0;
+    }
+    .error .err-icon { font-size: 40px; margin-bottom: 8px; }
+    .error p { color: #ef9a9a; font-size: 14px; }
+
+    .spinner {
+      display: none;
+      text-align: center;
+      padding: 24px 0;
+    }
+    .spin {
+      width: 36px; height: 36px;
+      border: 3px solid #ffffff20;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .api-note {
+      margin-top: 18px;
+      background: #ffd54f18;
+      border: 1px solid #ffd54f33;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--gold);
+      line-height: 1.6;
+    }
+    .api-note code {
+      background: #0003;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="search-wrap">
+    <input type="text" id="cityInput" placeholder="Введіть місто…" value="Kyiv" />
+    <button id="searchBtn" title="Пошук">🔍</button>
+  </div>
+
+  <div class="card" id="card">
+
+    <div class="placeholder" id="placeholder">
+      <div class="icon-big">🌤️</div>
+      <p>Введіть місто та натисніть 🔍</p>
+    </div>
+>
+    <div class="spinner" id="spinner">
+      <div class="spin"></div>
+    </div>
+
+    <div class="error" id="errorBox">
+      <div class="err-icon">⚠️</div>
+      <p id="errorMsg">Місто не знайдено. Перевірте назву.</p>
+    </div>
+
+    <div class="weather" id="weatherResult">
+      <div class="city-row">
+        <div class="city-name" id="cityName">—</div>
+        <div class="country-tag" id="countryTag">UA</div>
+      </div>
+      <div class="date-line" id="dateLine">—</div>
+
+      <div class="main-temp-row">
+        <div class="weather-icon" id="weatherIcon">🌡️</div>
+        <div class="temp-big" id="tempBig">—<sup>°C</sup></div>
+      </div>
+
+      <div class="description" id="description">—</div>
+
+      <div class="details">
+        <div class="detail-item">
+          <div class="detail-label">Відчувається</div>
+          <div class="detail-value" id="feelsLike">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Вологість</div>
+          <div class="detail-value" id="humidity">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Вітер</div>
+          <div class="detail-value" id="wind">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Видимість</div>
+          <div class="detail-value" id="visibility">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="api-note" id="apiNote">
+    ℹ️ Вставте свій ключ OpenWeatherMap у змінну <code>API_KEY</code> у коді скрипта.<br>
+    Отримати безкоштовно: <strong>openweathermap.org/api</strong>
+  </div>
+
+</div>
+
+<script>
+  const API_KEY = '2e9af1bed48f3d59d8fbc6b21844171c';
+
+  const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
+
+  const cityInput     = document.getElementById('cityInput');
+  const searchBtn     = document.getElementById('searchBtn');
+  const card          = document.getElementById('card');
+  const placeholder   = document.getElementById('placeholder');
+  const spinner       = document.getElementById('spinner');
+  const errorBox      = document.getElementById('errorBox');
+  const errorMsg      = document.getElementById('errorMsg');
+  const weatherResult = document.getElementById('weatherResult');
+  const apiNote       = document.getElementById('apiNote');
+
+  // Іконки погоди (відповідно до кодів OpenWeatherMap)
+  const weatherIcons = {
+    '01': '☀️',  // ясно
+    '02': '⛅',  // мало хмар
+    '03': '🌥️', // хмарно
+    '04': '☁️',  // похмуро
+    '09': '🌧️', // злива
+    '10': '🌦️', // дощ
+    '11': '⛈️',  // гроза
+    '13': '❄️',  // сніг
+    '50': '🌫️', // туман
+  };
+
+  function getWeatherIcon(iconCode) {
+    const prefix = iconCode.slice(0, 2);
+    return weatherIcons[prefix] ?? '🌡️';
+  }
+
+  // Форматування дати
+  function formatDate(ts, timezone) {
+    const d = new Date((ts + timezone) * 1000);
+    return d.toLocaleDateString('uk-UA', {
+      timeZone: 'UTC',
+      weekday: 'long', day: 'numeric', month: 'long'
+    });
+  }
+
+  // Показати/приховати секції
+  function show(el)  { el.style.display = 'block'; }
+  function hide(el)  { el.style.display = 'none';  }
+
+  function setState(state) {
+    hide(placeholder); hide(spinner); hide(errorBox); hide(weatherResult);
+    if (state === 'placeholder') show(placeholder);
+    if (state === 'loading')     show(spinner);
+    if (state === 'error')       show(errorBox);
+    if (state === 'result')      show(weatherResult);
+  }
+
+  // ─── Головна функція: отримати погоду через fetch ───
+  async function fetchWeather(city) {
+    if (!city.trim()) return;
+
+    // Перевірка наявності ключа
+    if (API_KEY === 'YOUR_API_KEY_HERE') {
+      setState('error');
+      errorMsg.textContent = 'Будь ласка, вставте дійсний ключ API_KEY у скрипті.';
+      return;
+    }
+
+    setState('loading');
+    card.classList.add('loading');
+
+    const url = `${BASE_URL}?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=uk`;
+
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || `HTTP ${response.status}`);
+      }
+      const data = await response.json();
+
+      const {
+        name,
+        sys:     { country, sunrise, sunset },
+        weather: [{ description, icon }],
+        main:    { temp, feels_like, humidity },
+        wind:    { speed },
+        visibility,
+        timezone,
+        dt
+      } = data;
+
+      document.getElementById('cityName').textContent   = name;
+      document.getElementById('countryTag').textContent = country;
+      document.getElementById('dateLine').textContent   = formatDate(dt, timezone);
+      document.getElementById('weatherIcon').textContent= getWeatherIcon(icon);
+      document.getElementById('tempBig').innerHTML      = `${Math.round(temp)}<sup>°C</sup>`;
+      document.getElementById('description').textContent= description;
+      document.getElementById('feelsLike').textContent  = `${Math.round(feels_like)} °C`;
+      document.getElementById('humidity').textContent   = `${humidity} %`;
+      document.getElementById('wind').textContent       = `${speed} м/с`;
+      document.getElementById('visibility').textContent = visibility
+        ? `${(visibility / 1000).toFixed(1)} км`
+        : '—';
+
+      setState('result');
+      apiNote.style.display = 'none';
+
+    } catch (err) {
+      setState('error');
+      errorMsg.textContent = err.message.includes('city not found')
+        ? 'Місто не знайдено. Перевірте назву.'
+        : `Помилка: ${err.message}`;
+    } finally {
+      card.classList.remove('loading');
+    }
+  }
+
+  searchBtn.addEventListener('click', () => fetchWeather(cityInput.value));
+
+  cityInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') fetchWeather(cityInput.value);
+  });
+</script>
+
+</body>
+</html>

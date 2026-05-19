@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JSON Генератор</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0e0e11;
+      --surface: #16161a;
+      --panel:   #1c1c22;
+      --border:  #2e2e38;
+      --accent:  #00e5a0;
+      --accent2: #ff6b6b;
+      --yellow:  #ffd166;
+      --text:    #e8e8f0;
+      --muted:   #6b6b80;
+      --radius:  12px;
+      --mono:    'JetBrains Mono', monospace;
+      --sans:    'Syne', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+      animation: fadeDown .5s ease both;
+    }
+    header h1 {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); font-size: 14px; margin-top: 6px; font-family: var(--mono); }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Layout ── */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 1100px;
+      animation: fadeUp .5s .1s ease both;
+    }
+    @media (max-width: 750px) { .workspace { grid-template-columns: 1fr; } }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .panel-header .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .dot-green  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .dot-red    { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+    .dot-yellow { background: var(--yellow);  box-shadow: 0 0 6px var(--yellow); }
+
+    /* ── Form ── */
+    .form-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    input, select, textarea {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; }
+    select option { background: var(--panel); }
+
+    /* Tags input */
+    .tags-wrap {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 44px;
+      align-items: center;
+      transition: border-color .2s;
+    }
+    .tags-wrap:focus-within { border-color: var(--accent); }
+    .tag {
+      background: var(--accent);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px 3px 10px;
+      border-radius: 20px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .tag button {
+      background: none; border: none; cursor: pointer;
+      color: var(--bg); font-size: 13px; line-height: 1;
+      padding: 0;
+    }
+    .tags-wrap input {
+      border: none; background: transparent; padding: 4px; flex: 1; min-width: 80px;
+    }
+
+    /* Checkbox row */
+    .check-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted); font-family: var(--mono);
+    }
+    input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Number row */
+    .num-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── Buttons ── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      flex: 1;
+      padding: 12px 18px;
+      border-radius: 8px;
+      border: none;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: transform .15s, opacity .15s;
+    }
+    .btn:hover  { opacity: .85; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent);  color: var(--bg); }
+    .btn-clear   { background: var(--panel);   color: var(--muted); border: 1px solid var(--border); }
+    .btn-save    { background: var(--yellow);  color: var(--bg); }
+
+    /* ── Output ── */
+    .output-body { padding: 0; position: relative; height: 100%; min-height: 420px; }
+    .output-body pre {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.7;
+      padding: 20px;
+      height: 100%;
+      overflow: auto;
+      white-space: pre;
+      color: var(--text);
+    }
+
+    /* Syntax highlight */
+    .json-key    { color: #7ec8e3; }
+    .json-str    { color: var(--accent); }
+    .json-num    { color: var(--yellow); }
+    .json-bool   { color: var(--accent2); }
+    .json-null   { color: var(--muted); }
+
+    /* Copy badge */
+    .copy-btn {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s;
+      z-index: 2;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Stats bar ── */
+    .stats {
+      display: flex; gap: 20px; flex-wrap: wrap;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .stat-item span { color: var(--text); font-weight: 600; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--accent); color: var(--bg);
+      font-family: var(--mono); font-size: 13px; font-weight: 700;
+      padding: 10px 22px; border-radius: 50px;
+      transition: transform .3s ease;
+      pointer-events: none; z-index: 999;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── Empty state ── */
+    .empty {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100%; min-height: 380px;
+      color: var(--muted); gap: 10px;
+    }
+    .empty .icon { font-size: 42px; }
+    .empty p { font-family: var(--mono); font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>JSON <span>Генератор</span></h1>
+  <p>// створення · перегляд · збереження JSON на диск</p>
+</header>
+
+<div class="workspace">
+
+  <!-- ── Left: Form ── -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="dot dot-yellow"></div>
+      Вхідні дані
+    </div>
+    <div class="form-body">
+
+      <label>Ім'я / Name
+        <input id="fName" type="text" placeholder="Іван Франко" />
+      </label>
+
+      <label>Email
+        <input id="fEmail" type="email" placeholder="ivan@example.com" />
+      </label>
+
+      <label>Вік / Age
+        <input id="fAge" type="number" min="0" max="150" placeholder="30" />
+      </label>
+
+      <label>Місто / City
+        <input id="fCity" type="text" placeholder="Львів" />
+      </label>
+
+      <label>Роль / Role
+        <select id="fRole">
+          <option value="developer">Developer</option>
+          <option value="designer">Designer</option>
+          <option value="manager">Manager</option>
+          <option value="analyst">Analyst</option>
+          <option value="student">Student</option>
+        </select>
+      </label>
+
+      <label>Навички / Skills (Enter для додавання)
+        <div class="tags-wrap" id="tagsWrap">
+          <input id="tagInput" type="text" placeholder="JavaScript…" />
+        </div>
+      </label>
+
+      <div class="num-row">
+        <label>Рейтинг (0–5)
+          <input id="fRating" type="number" min="0" max="5" step="0.1" placeholder="4.5" />
+        </label>
+        <label>Проєктів
+          <input id="fProjects" type="number" min="0" placeholder="12" />
+        </label>
+      </div>
+
+      <label>Нотатка / Note
+        <textarea id="fNote" placeholder="Короткий опис…"></textarea>
+      </label>
+
+      <div class="check-row">
+        <input type="checkbox" id="fActive" checked />
+        <label for="fActive" style="flex-direction:row;gap:6px;font-size:12px;">
+          Активний акаунт
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="generate()">▶ Згенерувати</button>
+        <button class="btn btn-clear"   onclick="clearForm()">✕ Очистити</button>
+      </div>
+      <button class="btn btn-save" onclick="saveToFile()">⬇ Зберегти JSON на диск</button>
+
+    </div>
+  </div>
+
+  <!-- ── Right: Output ── -->
+  <div class="panel" style="display:flex;flex-direction:column;">
+    <div class="panel-header">
+      <div class="dot dot-green"></div>
+      JSON Вивід
+    </div>
+
+    <div class="output-body" style="flex:1;">
+      <div class="empty" id="emptyState">
+        <div class="icon">📄</div>
+        <p>Заповніть форму і натисніть ▶ Згенерувати</p>
+      </div>
+      <pre id="jsonOutput" style="display:none;"></pre>
+      <button class="copy-btn" id="copyBtn" onclick="copyJSON()" style="display:none;">
+        📋 Копіювати
+      </button>
+    </div>
+
+    <div class="stats" id="statsBar" style="display:none;">
+      <div class="stat-item">Розмір: <span id="statSize">—</span></div>
+      <div class="stat-item">Рядків: <span id="statLines">—</span></div>
+      <div class="stat-item">Полів: <span id="statFields">—</span></div>
+      <div class="stat-item">Час: <span id="statTime">—</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ═══════════════════════════════════════════
+  //  TAGS (навички)
+  // ═══════════════════════════════════════════
+  const tags = [];
+
+  document.getElementById('tagInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = e.target.value.trim();
+      if (val && !tags.includes(val)) {
+        tags.push(val);
+        renderTags();
+      }
+      e.target.value = '';
+    }
+  });
+
+  function removeTag(i) {
+    tags.splice(i, 1);
+    renderTags();
+  }
+
+  function renderTags() {
+    const wrap = document.getElementById('tagsWrap');
+    // Видаляємо старі теги (але не input)
+    wrap.querySelectorAll('.tag').forEach(t => t.remove());
+    tags.forEach((t, i) => {
+      const el = document.createElement('div');
+      el.className = 'tag';
+      el.innerHTML = `${t}<button onclick="removeTag(${i})">×</button>`;
+      wrap.insertBefore(el, document.getElementById('tagInput'));
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  //  GENERATE — побудова JSON-структури
+  // ═══════════════════════════════════════════
+  let currentJSON = null;
+
+  function generate() {
+    const t0 = performance.now();
+
+    // 1. Зчитуємо значення з форми
+    const name     = document.getElementById('fName').value.trim()    || 'Без імені';
+    const email    = document.getElementById('fEmail').value.trim()   || null;
+    const ageRaw   = document.getElementById('fAge').value;
+    const city     = document.getElementById('fCity').value.trim()    || null;
+    const role     = document.getElementById('fRole').value;
+    const rating   = document.getElementById('fRating').value;
+    const projects = document.getElementById('fProjects').value;
+    const note     = document.getElementById('fNote').value.trim()    || null;
+    const active   = document.getElementById('fActive').checked;
+
+    // 2. Формуємо JavaScript-об'єкт (майбутній JSON)
+    const data = {
+      id:        crypto.randomUUID(),          // унікальний ідентифікатор
+      createdAt: new Date().toISOString(),     // мітка часу ISO 8601
+      profile: {
+        name,
+        email,
+        age:    ageRaw   ? Number(ageRaw)   : null,
+        city,
+        active,
+      },
+      professional: {
+        role,
+        skills:   [...tags],                  // копія масиву тегів
+        rating:   rating   ? Number(Number(rating).toFixed(1))   : null,
+        projects: projects ? Number(projects) : null,
+      },
+      note,
+      meta: {
+        generator: 'JSON Generator v1.0',
+        language:  'JavaScript',
+        method:    'JSON.stringify()',
+      }
+    };
+
+    // 3. Перетворюємо об'єкт у відформатований JSON-рядок
+    //    JSON.stringify(value, replacer, space)
+    const jsonString = JSON.stringify(data, null, 2);
+    currentJSON = jsonString;
+
+    // 4. Підсвічуємо синтаксис та виводимо
+    document.getElementById('jsonOutput').innerHTML = highlight(jsonString);
+    document.getElementById('jsonOutput').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('copyBtn').style.display    = 'block';
+
+    // 5. Оновлюємо статистику
+    const lines  = jsonString.split('\n').length;
+    const fields = (jsonString.match(/"[^"]+"\s*:/g) || []).length;
+    const size   = new Blob([jsonString]).size;
+    const ms     = (performance.now() - t0).toFixed(2);
+
+    document.getElementById('statSize').textContent   = `${size} б`;
+    document.getElementById('statLines').textContent  = lines;
+    document.getElementById('statFields').textContent = fields;
+    document.getElementById('statTime').textContent   = `${ms} мс`;
+    document.getElementById('statsBar').style.display = 'flex';
+
+    showToast('✅ JSON згенеровано!');
+  }
+
+  // ═══════════════════════════════════════════
+  //  SAVE — збереження файлу на диск
+  // ═══════════════════════════════════════════
+  function saveToFile() {
+    if (!currentJSON) { showToast('⚠️ Спочатку згенеруйте JSON'); return; }
+
+    // Створюємо Blob з типом application/json
+    const blob = new Blob([currentJSON], { type: 'application/json' });
+
+    // Створюємо тимчасове посилання і клікаємо по ньому
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    // Ім'я файлу на основі поточного часу
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    link.href     = url;
+    link.download = `data_${ts}.json`;
+    link.click();
+
+    // Звільняємо пам'ять
+    URL.revokeObjectURL(url);
+    showToast('💾 Файл збережено на диск!');
+  }
+
+  // ═══════════════════════════════════════════
+  //  COPY
+  // ═══════════════════════════════════════════
+  function copyJSON() {
+    if (!currentJSON) return;
+    navigator.clipboard.writeText(currentJSON).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ Скопійовано';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 Копіювати';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  //  CLEAR
+  // ═══════════════════════════════════════════
+  function clearForm() {
+    ['fName','fEmail','fAge','fCity','fNote','fRating','fProjects'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('fActive').checked = true;
+    tags.length = 0;
+    renderTags();
+
+    currentJSON = null;
+    document.getElementById('jsonOutput').style.display  = 'none';
+    document.getElementById('emptyState').style.display  = 'flex';
+    document.getElementById('copyBtn').style.display     = 'none';
+    document.getElementById('statsBar').style.display    = 'none';
+    showToast('🗑 Форму очищено');
+  }
+
+  // ═══════════════════════════════════════════
+  //  SYNTAX HIGHLIGHT
+  // ═══════════════════════════════════════════
+  function highlight(json) {
+    return json
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(\.\d+)?([eE][+-]?\d+)?)/g, (match) => {
+        if (/^"/.test(match)) {
+          return /:$/.test(match)
+            ? `<span class="json-key">${match}</span>`
+            : `<span class="json-str">${match}</span>`;
+        }
+        if (/true|false/.test(match)) return `<span class="json-bool">${match}</span>`;
+        if (/null/.test(match))        return `<span class="json-null">${match}</span>`;
+        return `<span class="json-num">${match}</span>`;
+      });
+  }
+
+  // ═══════════════════════════════════════════
+  //  TOAST
+  // ═══════════════════════════════════════════
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+
+</body>
+</html>
