@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Новини</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;1,8..60,300&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #1a1209; --paper: #f4efe4; --cream: #ede7d8;
+    --accent: #8b1a1a; --rule: #c8b89a; --muted: #7a6e5f;
+    --card: #faf7f0;
+  }
+  body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4', Georgia, serif; }
+
+  /* ── MASTHEAD ── */
+  .masthead { background: var(--paper); border-bottom: 3px double var(--ink); padding: 1.5rem 2rem 0; }
+  .masthead-top { display: flex; justify-content: space-between; align-items: flex-end; }
+  .masthead-date { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .masthead-title { font-family: 'Playfair Display', serif; font-size: clamp(2.4rem,5vw,4.2rem); font-weight: 700; line-height: 1; letter-spacing: -.02em; text-align: center; flex: 1; padding: .3rem 0; }
+  .masthead-admin { font-size: .72rem; letter-spacing: .15em; text-transform: uppercase; text-align: right; }
+  .masthead-admin a { color: var(--accent); text-decoration: none; }
+  .masthead-admin a:hover { text-decoration: underline; }
+  .masthead-tagline { text-align: center; font-style: italic; color: var(--muted); font-size: .88rem; padding: .3rem 0 .8rem; }
+  .masthead-strip { display: flex; align-items: center; border-top: 1px solid var(--ink); padding: .45rem 0; gap: .6rem; flex-wrap: wrap; }
+  .strip-label { font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .strip-cats { display: flex; gap: .4rem; flex-wrap: wrap; flex: 1; }
+  .cat-pill { display: inline-block; padding: .15rem .7rem; border: 1px solid var(--rule); border-radius: 2px; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: all .15s; }
+  .cat-pill:hover, .cat-pill.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* ── SEARCH ── */
+  .search-bar { background: var(--cream); border-bottom: 1px solid var(--rule); padding: .7rem 2rem; }
+  .search-form { display: flex; max-width: 600px; margin: 0 auto; gap: .4rem; }
+  .search-input { flex: 1; padding: .45rem .8rem; border: 1px solid var(--rule); background: var(--paper); font-family: 'Source Serif 4', serif; font-size: .9rem; color: var(--ink); outline: none; }
+  .search-input:focus { border-color: var(--ink); }
+  .search-btn { padding: .45rem 1.2rem; background: var(--ink); color: var(--paper); border: none; cursor: pointer; font-family: 'Source Serif 4', serif; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; transition: background .15s; }
+  .search-btn:hover { background: var(--accent); }
+  .search-clear { padding: .45rem .8rem; background: none; border: 1px solid var(--rule); color: var(--muted); cursor: pointer; font-size: .78rem; text-decoration: none; display: flex; align-items: center; transition: all .15s; }
+  .search-clear:hover { border-color: var(--accent); color: var(--accent); }
+  .search-notice { text-align: center; font-size: .82rem; color: var(--muted); margin-top: .4rem; font-style: italic; }
+  .search-notice strong { color: var(--accent); font-style: normal; }
+
+  /* ── LAYOUT ── */
+  .layout { display: grid; grid-template-columns: 1fr 260px; gap: 0; max-width: 1100px; margin: 0 auto; }
+  .main-col { padding: 2rem 2rem 3rem; border-right: 1px solid var(--rule); }
+  .side-col { padding: 2rem 1.5rem 3rem; }
+
+  /* ── ARTICLES ── */
+  .results-header { font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: .5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; }
+  .article-card { border-bottom: 1px solid var(--rule); padding: 1.6rem 0; }
+  .article-card:first-of-type { border-top: 1px solid var(--rule); }
+  .article-card:last-of-type { border-bottom: none; }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .6rem; }
+  .card-category { font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+  .card-date { font-size: .72rem; color: var(--muted); white-space: nowrap; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 1.55rem; font-weight: 700; line-height: 1.2; margin-bottom: .55rem; }
+  .card-title a { color: var(--ink); text-decoration: none; }
+  .card-title a:hover { color: var(--accent); }
+  .card-excerpt { color: var(--muted); font-size: .93rem; line-height: 1.7; font-style: italic; margin-bottom: .8rem; }
+  .card-footer { display: flex; align-items: center; gap: 1rem; }
+  .read-more { font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
+  .read-more:hover { color: var(--ink); }
+  .comment-count { font-size: .72rem; color: var(--muted); letter-spacing: .05em; }
+
+  /* ── EMPTY ── */
+  .empty { padding: 3rem 0; text-align: center; font-style: italic; color: var(--muted); }
+  .empty a { color: var(--accent); }
+
+  /* ── PAGINATION ── */
+  .pagination { display: flex; align-items: center; justify-content: center; gap: .3rem; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
+  .page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem; padding: 0 .5rem; border: 1px solid var(--rule); font-size: .78rem; color: var(--ink); text-decoration: none; transition: all .15s; }
+  .page-link:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .page-link.current { background: var(--ink); color: var(--paper); border-color: var(--ink); cursor: default; font-weight: 700; }
+  .page-link.disabled { color: var(--rule); pointer-events: none; }
+  .page-info { font-size: .72rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin: 0 .5rem; }
+
+  /* ── SIDEBAR ── */
+  .side-section { margin-bottom: 2rem; }
+  .side-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; border-bottom: 2px solid var(--ink); padding-bottom: .4rem; margin-bottom: 1rem; letter-spacing: .02em; }
+  .side-cat-list { list-style: none; }
+  .side-cat-list li { border-bottom: 1px solid var(--cream); }
+  .side-cat-list a { display: flex; justify-content: space-between; align-items: center; padding: .45rem 0; font-size: .88rem; color: var(--ink); text-decoration: none; }
+  .side-cat-list a:hover { color: var(--accent); }
+  .side-cat-count { font-size: .72rem; color: var(--muted); }
+  .side-stat { display: flex; justify-content: space-between; padding: .4rem 0; border-bottom: 1px solid var(--cream); font-size: .85rem; }
+  .side-stat-num { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-top">
+    <div class="masthead-date">{% now "l, j E Y" %}</div>
+    <h1 class="masthead-title">Новини</h1>
+    <div class="masthead-admin"><a href="/admin/">⚙ Адмін-панель</a></div>
+  </div>
+  <p class="masthead-tagline">Актуальні статті та публікації</p>
+  <div class="masthead-strip">
+    <span class="strip-label">Рубрики:</span>
+    <div class="strip-cats">
+      <a href="/" class="cat-pill {% if not selected_category and not query %}active{% endif %}">Всі</a>
+      {% for cat in categories %}
+      <a href="/?category={{ cat.id }}{% if query %}&q={{ query }}{% endif %}" class="cat-pill {% if selected_category == cat.id|stringformat:'s' %}active{% endif %}">{{ cat.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</header>
+
+<div class="search-bar">
+  <form class="search-form" method="get" action="/">
+    {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+    <input class="search-input" type="text" name="q" value="{{ query }}" placeholder="Пошук статей за ключовими словами…">
+    <button class="search-btn" type="submit">Знайти</button>
+    {% if query or selected_category %}
+    <a class="search-clear" href="/">✕</a>
+    {% endif %}
+  </form>
+  {% if query %}
+  <p class="search-notice">Результати пошуку для: <strong>«{{ query }}»</strong> — знайдено {{ page_obj.paginator.count }} {% if page_obj.paginator.count == 1 %}стаття{% elif page_obj.paginator.count < 5 %}статті{% else %}статей{% endif %}</p>
+  {% endif %}
+</div>
+
+<div class="layout">
+  <main class="main-col">
+    <div class="results-header">
+      <span>
+        {% if query %}Пошук: «{{ query }}»{% elif selected_category %}Категорія{% else %}Всі статті{% endif %}
+      </span>
+      <span>{{ page_obj.paginator.count }} матеріал{% if page_obj.paginator.count != 1 %}ів{% endif %}</span>
+    </div>
+
+    {% if page_obj.object_list %}
+      {% for article in page_obj %}
+      <article class="article-card">
+        <div class="card-head">
+          <span class="card-category">{% if article.category %}{{ article.category.name }}{% else %}Без категорії{% endif %}</span>
+          <span class="card-date">{{ article.published_at|date:"d.m.Y" }}</span>
+        </div>
+        <h2 class="card-title"><a href="{% url 'articles:detail' article.pk %}">{{ article.title }}</a></h2>
+        <p class="card-excerpt">{{ article.text|truncatewords:28 }}</p>
+        <div class="card-footer">
+          <a href="{% url 'articles:detail' article.pk %}" class="read-more">Читати далі →</a>
+          <span class="comment-count">💬 {{ article.comments.count }}</span>
+        </div>
+      </article>
+      {% endfor %}
+
+      <!-- PAGINATION -->
+      {% if page_obj.paginator.num_pages > 1 %}
+      <nav class="pagination">
+        {% if page_obj.has_previous %}
+          <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">«</a>
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">‹</a>
+        {% else %}
+          <span class="page-link disabled">«</span>
+          <span class="page-link disabled">‹</span>
+        {% endif %}
+
+        <span class="page-info">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">›</a>
+          <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">»</a>
+        {% else %}
+          <span class="page-link disabled">›</span>
+          <span class="page-link disabled">»</span>
+        {% endif %}
+      </nav>
+      {% endif %}
+
+    {% else %}
+      <div class="empty">
+        {% if query %}Нічого не знайдено за запитом «{{ query }}». <a href="/">Переглянути всі статті</a>
+        {% else %}Статей ще немає. <a href="/admin/articles/article/add/">Додати першу →</a>{% endif %}
+      </div>
+    {% endif %}
+  </main>
+
+  <aside class="side-col">
+    <div class="side-section">
+      <h3 class="side-title">Рубрики</h3>
+      <ul class="side-cat-list">
+        {% for cat in categories %}
+        <li>
+          <a href="/?category={{ cat.id }}">
+            {{ cat.name }}
+            <span class="side-cat-count">{{ cat.articles.count }}</span>
+          </a>
+        </li>
+        {% empty %}
+        <li style="font-size:.85rem;color:var(--muted);font-style:italic;padding:.4rem 0">Немає категорій</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="side-section">
+      <h3 class="side-title">Статистика</h3>
+      <div class="side-stat"><span>Всього статей</span><span class="side-stat-num">{{ page_obj.paginator.count }}</span></div>
+      <div class="side-stat"><span>Рубрик</span><span class="side-stat-num">{{ categories.count }}</span></div>
+      <div class="side-stat"><span>Сторінок</span><span class="side-stat-num">{{ page_obj.paginator.num_pages }}</span></div>
+    </div>
+  </aside>
+</div>
+</body>
+</html>
