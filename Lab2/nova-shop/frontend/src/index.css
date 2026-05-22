@@ -1,0 +1,138 @@
+:root {
+  --bg:        #0b0b0f;
+  --surface:   #13131a;
+  --surface2:  #1e1e2a;
+  --border:    #2a2a3a;
+  --accent:    #e8ff47;
+  --accent2:   #7c5cfc;
+  --text:      #f0f0f8;
+  --muted:     #8888aa;
+  --danger:    #ff4d6d;
+  --success:   #00e5a0;
+  --radius:    12px;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+h1,h2,h3,h4,h5 { font-family: var(--font-head); }
+
+a { color: inherit; text-decoration: none; }
+
+img { max-width: 100%; display: block; }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  width: 100%;
+  font-size: 14px;
+  transition: border-color .2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent2);
+  outline: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Utilities */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 22px; border-radius: 8px; font-size: 14px; font-weight: 500;
+  transition: all .2s; cursor: pointer; white-space: nowrap;
+}
+.btn-primary   { background: var(--accent); color: #000; }
+.btn-primary:hover { background: #d4eb00; transform: translateY(-1px); }
+.btn-outline   { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn-outline:hover { border-color: var(--accent2); color: var(--accent2); }
+.btn-ghost     { background: transparent; color: var(--muted); }
+.btn-ghost:hover { color: var(--text); }
+.btn-danger    { background: var(--danger); color: #fff; }
+.btn-sm        { padding: 7px 14px; font-size: 13px; }
+.btn:disabled  { opacity: .45; cursor: not-allowed; transform: none; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.badge {
+  display: inline-block; padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+}
+.badge-accent  { background: var(--accent); color: #000; }
+.badge-purple  { background: var(--accent2); color: #fff; }
+.badge-muted   { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+.tag {
+  display: inline-block; padding: 2px 10px; border-radius: 20px;
+  font-size: 11px; background: var(--surface2); color: var(--muted);
+  border: 1px solid var(--border); cursor: pointer; transition: all .15s;
+}
+.tag:hover, .tag.active { background: var(--accent2); color: #fff; border-color: transparent; }
+
+.page { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+.grid-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.spinner {
+  width: 40px; height: 40px; border: 3px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .7s linear infinite; margin: 60px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.fade-in { animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+/* Toast */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 20px; font-size: 14px;
+  animation: fadeIn .25s ease;
+  max-width: 320px;
+}
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error   { border-left: 3px solid var(--danger); }
+
+/* Status badge */
+.status { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+.status-pending     { background: #2a2000; color: #ffc400; }
+.status-confirmed   { background: #001a2a; color: #40a9ff; }
+.status-processing  { background: #1a001a; color: #c86aff; }
+.status-shipped     { background: #001a10; color: #00e5a0; }
+.status-delivered   { background: #001a10; color: #00e5a0; }
+.status-cancelled   { background: #2a0010; color: #ff4d6d; }
+.status-refunded    { background: #1a1a00; color: #ffcc00; }
